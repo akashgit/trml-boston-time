@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Line Stops</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #da291c;  /* MBTA Red */
+        }
+        .stop-list {
+            display: grid;
+            gap: 10px;
+        }
+        .stop-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 8px;
+            border-left: 4px solid #da291c;
+        }
+        .stop-name {
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+        .stop-id {
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #666;
+            background: #eee;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .no-stops {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Red Line Stops</h1>
+        </div>
+
+        <div class="stop-list">
+            {% if stops %}
+                {% for stop in stops %}
+                    <div class="stop-item">
+                        <div class="stop-name">{{ stop.attributes.name }}</div>
+                        <div class="stop-id">{{ stop.id }}</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-stops">
+                    No stops found
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html> 
