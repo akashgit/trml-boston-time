@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTA Train Times - Porter Square</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+        }
+        .panel {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #003366;
+        }
+        .track {
+            position: relative;
+            height: 100px;
+            background: #ddd;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .station {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #003366;
+            border-radius: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .station-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 14px;
+            color: #333;
+        }
+        .train {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #ff0000;
+            border-radius: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: left 1s linear;
+        }
+        .train-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 14px;
+            color: #333;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .outbound .train {
+            background: #003366;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel">
+            <div class="header">
+                <h2>Inbound to Porter</h2>
+            </div>
+            <div class="track">
+                <div class="station" style="left: 20%">
+                    <div class="station-label">Alewife</div>
+                </div>
+                <div class="station" style="left: 80%">
+                    <div class="station-label">Porter</div>
+                </div>
+                <div id="inbound-train" class="train" style="left: 20%">
+                    <div class="train-label">Loading...</div>
+                </div>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="header">
+                <h2>Next Train to Ashmont/Braintree</h2>
+            </div>
+            <div class="track">
+                <div class="station" style="left: 20%">
+                    <div class="station-label">Porter</div>
+                </div>
+                <div class="station" style="left: 80%">
+                    <div class="station-label">Ashmont/Braintree</div>
+                </div>
+                <div id="outbound-train" class="train" style="left: 20%">
+                    <div class="train-label">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateTrains() {
+            fetch('/api/trains')
+                .then(response => response.json())
+                .then(trains => {
+                    // Find closest inbound and outbound trains
+                    const inboundTrain = trains.find(t => t.direction === 0);
+                    const outboundTrain = trains.find(t => t.direction === 1);
+
+                    // Update inbound train
+                    const inboundTrainElement = document.getElementById('inbound-train');
+                    if (inboundTrain) {
+                        const minutes = inboundTrain.minutes_away;
+                        const position = Math.max(20, Math.min(80, 20 + (60 - minutes) * 1));
+                        inboundTrainElement.style.left = `${position}%`;
+                        inboundTrainElement.querySelector('.train-label').textContent = `${minutes} min`;
+                    } else {
+                        inboundTrainElement.style.left = '20%';
+                        inboundTrainElement.querySelector('.train-label').textContent = 'No trains';
+                    }
+
+                    // Update outbound train
+                    const outboundTrainElement = document.getElementById('outbound-train');
+                    if (outboundTrain) {
+                        const minutes = outboundTrain.minutes_away;
+                        const position = Math.max(20, Math.min(80, 20 + (60 - minutes) * 1));
+                        outboundTrainElement.style.left = `${position}%`;
+                        outboundTrainElement.querySelector('.train-label').textContent = `${minutes} min`;
+                    } else {
+                        outboundTrainElement.style.left = '20%';
+                        outboundTrainElement.querySelector('.train-label').textContent = 'No trains';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching train data:', error);
+                });
+        }
+
+        // Update immediately and then every 30 seconds
+        updateTrains();
+        setInterval(updateTrains, 30000);
+    </script>
+</body>
+</html> 
