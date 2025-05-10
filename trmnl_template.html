@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- TRMNL required CSS and JS -->
+    <link rel="stylesheet" href="https://usetrmnl.com/css/latest/plugins.css">
+    <script src="https://usetrmnl.com/js/latest/plugins.js"></script>
+    <!-- Google Fonts for Inter font family -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;350;375;400;450;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="environment trmnl">
+    <div class="screen">
+      <div class="view view--full">
+        <div class="layout">
+          <div class="columns">
+            <div class="column">
+              <div class="markdown">
+                <!-- Station Title -->
+                <span class="title">Porter Square</span>
+                <div class="content content--center">
+                  <!-- Current time calculation with timezone offset -->
+                  {% assign current_time = trmnl.system.timestamp_utc | plus: trmnl.user.utc_offset %}
+                  <div class="current-time">{{ current_time | date: "%I:%M %p" }}</div>
+                  
+                  <!-- Inbound Trains Section -->
+                  <div class="section">
+                    <span class="label label--underline">Inbound to Alewife</span>
+                    {% for train in data %}
+                      {% if train.attributes.direction_id == 1 %}
+                        <!-- Convert arrival time to readable format and calculate minutes until arrival -->
+                        {% assign arrival_time = train.attributes.arrival_time | date: "%I:%M %p" %}
+                        {% assign arrival_timestamp = train.attributes.arrival_time | date: "%s" | plus: trmnl.user.utc_offset %}
+                        {% assign minutes_diff = arrival_timestamp | minus: current_time | divided_by: 60 %}
+                        <div class="train-row">
+                          <span class="time">{{ arrival_time }}</span>
+                          <span class="mins">
+                            {% if minutes_diff <= 0 %}
+                              (Arriving)
+                            {% else %}
+                              ({{ minutes_diff }} min)
+                            {% endif %}
+                          </span>
+                          <!-- Route display with friendly names -->
+                          <span class="route">
+                            {% case train.relationships.route.data.id %}
+                              {% when 'Red' %}
+                                Red Line
+                              {% when 'CR-Fitchburg' %}
+                                Commuter Rail
+                              {% else %}
+                                {{ train.relationships.route.data.id }}
+                            {% endcase %}
+                          </span>
+                          <!-- Status indicators based on time and train status -->
+                          <span class="status">
+                            {% if train.attributes.status == null %}
+                              {% if minutes_diff <= 0 %}
+                                ✓
+                              {% elsif minutes_diff <= 2 %}
+                                ✓
+                              {% elsif minutes_diff <= 5 %}
+                                !
+                              {% else %}
+                                ✓
+                              {% endif %}
+                            {% else %}
+                              {% case train.attributes.status %}
+                                {% when 'ON_TIME' or 'ON TIME' %}
+                                  ✓
+                                {% when 'DELAYED' or 'LATE' %}
+                                  !
+                                {% when 'CANCELLED' or 'CANCELED' or 'SKIPPED' %}
+                                  ✗
+                                {% else %}
+                                  ?
+                                {% endcase %}
+                            {% endif %}
+                          </span>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+
+                  <!-- Outbound Trains Section -->
+                  <div class="section">
+                    <span class="label label--underline">Outbound to Ashmont/Braintree</span>
+                    {% for train in data %}
+                      {% if train.attributes.direction_id == 0 %}
+                        <!-- Same logic as inbound trains but for outbound direction -->
+                        {% assign arrival_time = train.attributes.arrival_time | date: "%I:%M %p" %}
+                        {% assign arrival_timestamp = train.attributes.arrival_time | date: "%s" | plus: trmnl.user.utc_offset %}
+                        {% assign minutes_diff = arrival_timestamp | minus: current_time | divided_by: 60 %}
+                        <div class="train-row">
+                          <span class="time">{{ arrival_time }}</span>
+                          <span class="mins">
+                            {% if minutes_diff <= 0 %}
+                              (Arriving)
+                            {% else %}
+                              ({{ minutes_diff }} min)
+                            {% endif %}
+                          </span>
+                          <span class="route">
+                            {% case train.relationships.route.data.id %}
+                              {% when 'Red' %}
+                                Red Line
+                              {% when 'CR-Fitchburg' %}
+                                Commuter Rail
+                              {% else %}
+                                {{ train.relationships.route.data.id }}
+                            {% endcase %}
+                          </span>
+                          <span class="status">
+                            {% if train.attributes.status == null %}
+                              {% if minutes_diff <= 0 %}
+                                ✓
+                              {% elsif minutes_diff <= 2 %}
+                                ✓
+                              {% elsif minutes_diff <= 5 %}
+                                !
+                              {% else %}
+                                ✓
+                              {% endif %}
+                            {% else %}
+                              {% case train.attributes.status %}
+                                {% when 'ON_TIME' or 'ON TIME' %}
+                                  ✓
+                                {% when 'DELAYED' or 'LATE' %}
+                                  !
+                                {% when 'CANCELLED' or 'CANCELED' or 'SKIPPED' %}
+                                  ✗
+                                {% else %}
+                                  ?
+                                {% endcase %}
+                            {% endif %}
+                          </span>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+                <!-- Footer with update times -->
+                <span class="label label--underline">Last updated: {{ current_time | date: "%I:%M %p" }}</span>
+                <span class="label label--underline">Next update: {{ trmnl.system.timestamp_utc | plus: trmnl.user.utc_offset | plus: 300 | date: "%I:%M %p" }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- TRMNL Title Bar -->
+        <div class="title_bar">
+          <img class="image" src="https://usetrmnl.com/images/plugins/trmnl--render.svg" />
+          <span class="title">MBTA Trains</span>
+          <span class="instance">Porter Square</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom styles for the display -->
+    <style>
+      .current-time {
+        font-size: 1.2em;
+        margin-bottom: 1em;
+      }
+      .section {
+        margin: 1em 0;
+      }
+      .train-row {
+        display: flex;
+        align-items: center;
+        margin: 0.5em 0;
+        gap: 1em;
+      }
+      .time {
+        font-weight: 600;
+        min-width: 80px;
+      }
+      .mins {
+        color: #666;
+      }
+      .route {
+        font-weight: 500;
+        color: #444;
+        min-width: 100px;
+      }
+      .status {
+        font-weight: 600;
+      }
+      .no-trains {
+        color: #666;
+        font-style: italic;
+      }
+    </style>
+  </body>
+</html> 
